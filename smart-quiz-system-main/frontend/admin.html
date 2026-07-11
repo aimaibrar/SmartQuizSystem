@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — Smart Quiz System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="navbar-brand" onclick="switchTab('pool')"><i class="fa-solid fa-brain"></i> Smart Quiz System</div>
+        <div class="user-info">
+            <span id="user-display">Admin Name (RegNo)</span>
+            <span class="role-badge" style="background: var(--primary); color: #fff;">Admin</span>
+            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container">
+        <!-- Error & Success Alerts -->
+        <div id="error-msg" class="alert alert-error hidden"></div>
+        <div id="success-msg" class="alert alert-success hidden"></div>
+
+        <!-- Dashboard Navigation Tabs -->
+        <div class="tab-container">
+            <button id="tab-pool" class="tab-btn active" onclick="switchTab('pool')">Question Pool</button>
+            <button id="tab-add" class="tab-btn" onclick="switchTab('add')">Add Question</button>
+            <button id="tab-ai" class="tab-btn" onclick="switchTab('ai')">Groq AI Generator</button>
+            <button id="tab-results" class="tab-btn" onclick="switchTab('results')">Student Results</button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 1: QUESTION POOL -->
+        <!-- ========================================== -->
+        <section id="view-pool" class="tab-content active">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <h2>Manage Questions</h2>
+                        <p id="pool-counter" class="subtitle">Loading question pool status...</p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="loadQuestionPool()"><i class="fa-solid fa-rotate"></i> Refresh Pool</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">Question Text</th>
+                                <th style="width: 35%;">Options</th>
+                                <th style="width: 10%;">Correct</th>
+                                <th style="width: 10%;">Difficulty</th>
+                                <th style="width: 5%;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="questions-table-body">
+                            <tr>
+                                <td colspan="5" class="center" style="color: var(--text-secondary);">Loading questions...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: MANUAL ADD QUESTION -->
+        <!-- ========================================== -->
+        <section id="view-add" class="tab-content">
+            <div class="card" style="max-width: 720px; margin: 0 auto;">
+                <h2>Create a New Question</h2>
+                <p class="subtitle">Manually register a multiple-choice question inside the database.</p>
+                
+                <form id="question-form" onsubmit="handleManualSubmit(event)">
+                    <div class="form-group">
+                        <label for="manual-text">Question Text</label>
+                        <textarea id="manual-text" rows="3" placeholder="Enter the question details..." required></textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label for="manual-optA">Option A</label>
+                            <input type="text" id="manual-optA" placeholder="Option A text" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-optB">Option B</label>
+                            <input type="text" id="manual-optB" placeholder="Option B text" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-optC">Option C</label>
+                            <input type="text" id="manual-optC" placeholder="Option C text" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-optD">Option D</label>
+                            <input type="text" id="manual-optD" placeholder="Option D text" required />
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label for="manual-correct">Correct Option</label>
+                            <select id="manual-correct">
+                                <option value="A">Option A</option>
+                                <option value="B">Option B</option>
+                                <option value="C">Option C</option>
+                                <option value="D">Option D</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-difficulty">Difficulty Level</label>
+                            <select id="manual-difficulty">
+                                <option value="easy">Easy</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn full-width">Add Question to DB</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: GROQ AI GENERATOR -->
+        <!-- ========================================== -->
+        <section id="view-ai" class="tab-content">
+            <div class="card" style="max-width: 600px; margin: 0 auto;">
+                <div style="font-size: 3rem; text-align: center; margin-bottom: 12px; color: #fbbf24;"><i class="fa-solid fa-bolt"></i></div>
+                <h2 class="center">Groq AI Quiz Builder</h2>
+                <p class="subtitle center">Enter a topic and amount, and Groq AI will generate MCQs automatically.</p>
+                
+                <div id="ai-form">
+                    <div class="form-group">
+                        <label for="ai-topic">Quiz Topic</label>
+                        <input type="text" id="ai-topic" placeholder="e.g. Java Streams, SQL joins, CSS Flexbox" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ai-count">Number of Questions</label>
+                        <input type="number" id="ai-count" min="1" max="20" value="5" required />
+                    </div>
+
+                    <button class="btn full-width" onclick="triggerAiGeneration()">Generate & Save to Pool</button>
+                </div>
+
+                <!-- Spinner Container -->
+                <div id="ai-loading" class="center hidden" style="margin-top: 24px;">
+                    <div class="spinner"></div>
+                    <p style="color: var(--primary); font-weight: 600; margin-top: 12px;">Contacting Groq API and parsing response...</p>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">This process may take a few seconds.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: STUDENT RESULTS MONITOR -->
+        <!-- ========================================== -->
+        <section id="view-results" class="tab-content">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <h2>Global Quiz Results</h2>
+                        <p class="subtitle">Monitor students' academic performance and submission records.</p>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <input type="text" id="search-student" placeholder="Search by student registration number..." oninput="filterResultsTable()" style="width: 280px; padding: 8px 12px; font-size: 0.9rem;" />
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Student Name</th>
+                                <th>Reg No</th>
+                                <th>Score</th>
+                                <th>Percentage</th>
+                                <th>Grade</th>
+                                <th>Submission</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-table-body">
+                            <tr>
+                                <td colspan="7" class="center" style="color: var(--text-secondary);">Loading student results...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
